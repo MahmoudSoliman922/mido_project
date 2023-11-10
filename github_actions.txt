@@ -1,0 +1,10 @@
+# lw enta 3amalt change w 3ayez t update el cloud
+git add .
+git commit -m 'ay7aga'
+git push origin equations
+
+# lw ana 3mlt change w 3yzak t update el laptop
+git pull origin equations
+
+# 3shan t5osh 3ala el folder
+cd Desktop/hamada/mido_project/
