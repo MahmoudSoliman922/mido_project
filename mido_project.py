@@ -1,3 +1,13 @@
+
+
+last_number = 0
+rakam = 0
+while rakam >=0:
+    rakam = 1 + 2
+    if(rakam > 0):
+        last_numer = rakam
+
+
 m/A_t = (root(2000*(h_1-h_t)*eta_p)/v_t)
 m/A_Bs = (root(2000*(h_2-h_Bs)*eta_s)/v_Bs)
 (p_Bp * A_Bp) – (p_Ap * A_Ap) = m_p * (V_Ap – V_Bp)
