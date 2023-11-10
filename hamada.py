@@ -1,4 +1,5 @@
 import CoolProp.CoolProp as CP
+import math
 
 
 def hamada():
@@ -27,4 +28,6 @@ def hamada():
     print('rho_gen: ', rho_gen)
     print('rho_evap: ', rho_evap)
 
-hamada()
+# hamada()
+
+print(math.sqrt(9))
