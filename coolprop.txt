@@ -1,0 +1,8 @@
+
+        h_gen =  py.CoolProp.CoolProp.PropsSI('H', 'T', T_gen + T_superheat_gen, 'Q', 1, fluid_name);
+        h_cond = py.CoolProp.CoolProp.PropsSI('H', 'T', T_cond, 'Q', 0, fluid_name);
+        h_evap = py.CoolProp.CoolProp.PropsSI('H', 'T', T_evap + T_superheat_evap, 'Q', 1, fluid_name);
+
+        % Calculate refrigerant properties at generator and evaporator
+        rho_gen = py.CoolProp.CoolProp.PropsSI('D', 'T', T_gen + T_superheat_gen, 'P', p_evap, fluid_name);
+        rho_evap = py.CoolProp.CoolProp.PropsSI('D', 'T', T_evap + T_superheat_evap, 'P', p_evap, fluid_name);
