@@ -1,0 +1,95 @@
+function Model_13
+    % Input data
+    T_gen = 353.15;         % Generator temperature in K
+    T_cond = 308.15;        % Condenser temperature in K
+    T_evap = 278.15;        % Evaporator temperature in K
+    T_superheat_gen = 5;    % Degree of superheat at the generator in K
+    T_superheat_evap = 5;   % Degree of superheat at the evaporator in K
+    eta_nozzle_p = 97;      % Isentropic efficiency of the primary nozzle
+    eta_nozzle_s = 97;      % Isentropic efficiency of the secondary nozzle
+    eta_diffuser = 98;      % Isentropic efficiency of the diffuser
+    Q_evap = 6000;          % Refrigeration capacity in W
+    p_cond = 900000;        % Condenser pressure in Pa (known or provided)
+    p_evap = 380000;        % Evaporator pressure in Pa (known or provided)
+    m_dot_secondary = 491;
+
+    % Other constants and properties
+    fluid_name = 'R1234yf';     % Refrigerant name
+
+    % Define the convergence tolerance for iterative method
+    tolerance = 1e-8;
+
+    % Define the initial guesses for nozzle areas
+    A_nozzle_p_guess = 1e-4;    % Initial guess for primary nozzle area in m^2
+    A_nozzle_s_guess = 1e-3;    % Initial guess for secondary nozzle area in m^2
+
+    % Define iteration variables
+    convergence_achieved = false;       % Convergence flag
+    max_iterations = 10000;               % Maximum number of iterations
+
+    % Initialize variables
+    eta_ejector = 0.97;     % Ejector efficiency
+    ER = 0.1;               % Entrainment ratio
+    COP = 0.1;              % Coefficient of Performance
+    AR = 0.1;               % Nozzle area ratio
+
+    for iteration = 1:max_iterations
+        % Calculate the enthalpies at generator, condenser, and evaporator using CoolProp
+
+        h_gen =  py.CoolProp.CoolProp.PropsSI('H', 'T', T_gen + T_superheat_gen, 'Q', 1, fluid_name);
+        h_cond = py.CoolProp.CoolProp.PropsSI('H', 'T', T_cond, 'Q', 0, fluid_name);
+        h_evap = py.CoolProp.CoolProp.PropsSI('H', 'T', T_evap + T_superheat_evap, 'Q', 1, fluid_name);
+        
+        disp(h_gen);
+
+        % Calculate refrigerant properties at generator and evaporator
+        rho_gen = py.CoolProp.CoolProp.PropsSI('D', 'T', T_gen + T_superheat_gen, 'P', p_evap, fluid_name);
+        rho_evap = py.CoolProp.CoolProp.PropsSI('D', 'T', T_evap + T_superheat_evap, 'P', p_evap, fluid_name);
+
+        % Calculate the refrigerant mass flow rate (m_dot) based on Q_evap and enthalpy change
+        delta_h_evap_cond = h_cond - h_evap;    % Enthalpy change between evaporator and condenser
+        m_dot = Q_evap / delta_h_evap_cond;     % Mass flow rate based on refrigeration capacity
+
+        % Calculate the pressure ratio based on mass flow rate and specific enthalpy change
+        delta_h_gen_evap = h_evap - h_gen;                      % Enthalpy change between generator and evaporator
+        P_ratio = delta_h_gen_evap / (m_dot * eta_nozzle_p);    % Pressure ratio based on isentropic primary nozzle efficiency
+
+        % Update the nozzle areas using the pressure ratio and mass flow rate
+        A_nozzle_p_new = m_dot / (sqrt(2 * rho_gen * P_ratio)); % Primary nozzle area
+        A_nozzle_s_new = m_dot / (sqrt(2 * rho_evap));          % Secondary nozzle area (Assuming it's a choked nozzle)
+
+        % Check for convergence
+        if abs(A_nozzle_p_new - A_nozzle_p_guess) < tolerance && abs(A_nozzle_s_new - A_nozzle_s_guess) < tolerance
+            convergence_achieved = true;
+            break; % Break out of the loop if convergence is achieved
+        end
+
+        % Update the nozzle areas for the next iteration
+        A_nozzle_p_guess = A_nozzle_p_new;
+        A_nozzle_s_guess = A_nozzle_s_new;
+    end
+
+    if convergence_achieved
+        % Calculate ejector efficiency (eta_ejector), entrainment ratio (ER), and COP
+        eta_ejector = (1 - (1 - eta_nozzle_p) / (1 - eta_nozzle_s)) * eta_diffuser;
+        ER = m_dot / (m_dot_secondary); % Assuming m_dot_secondary is the mass flow rate from the secondary nozzle
+        COP = Q_evap / (m_dot * (h_evap - h_cond));
+
+        % Calculate the nozzle area ratio (AR)
+        AR = A_nozzle_s_guess / A_nozzle_p_guess;
+
+        % Display the results
+        
+
+        disp(['Primary Nozzle Area (A_nozzle_p): ' num2str(A_nozzle_p_guess) ' m^2']);
+        disp(['Secondary Nozzle Area (A_nozzle_s): ' num2str(A_nozzle_s_guess) ' m^2']);
+        disp(['Refrigerant Mass Flow Rate (m_dot): ' num2str(m_dot) ' kg/s']);
+        disp(['Ejector Efficiency: ' num2str(eta_ejector)]);
+        disp(['Entrainment Ratio (ER): ' num2str(ER)]);
+        disp(['Coefficient of Performance (COP): ' num2str(COP)]);
+        disp(['Nozzle Area Ratio (AR): ' num2str(AR)]);
+    else
+        disp('Convergence not achieved. Please check input data and model assumptions.');
+    end
+end
+
